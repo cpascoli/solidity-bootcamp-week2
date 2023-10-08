@@ -6,7 +6,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import { Ownable2Step } from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import { IRewardToken } from "./tokens/RewardToken.sol";
+import { IRewardToken } from "./token/RewardToken.sol";
 
 
 /**
@@ -50,6 +50,7 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
         if (tokenToOwner[tokenId] != msg.sender) revert NotTheTokenOwner();
 
         delete tokenToOwner[tokenId];
+        delete ownerToTimeFarming[msg.sender];
 
         nftToken.safeTransferFrom(address(this), msg.sender, tokenId);
 
@@ -63,20 +64,16 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
         // check that the NFT deposited belongs to the caller
         if (tokenToOwner[tokenId] != msg.sender) revert NotTheTokenOwner();
 
-        // the time interval since the NFT was depoisted or the last claim
-        uint256 farmingPeriod = block.timestamp - ownerToTimeFarming[msg.sender];
+        uint256 toMint = claimableTokens(msg.sender);
 
-        // calculate the amount of tokens to mint to the staker
-        uint256 secondsIn24h = 86_400;
-        uint256 rewardTokenDecimals = 1e18;
-        uint256 tokensToMint = farmingPeriod * REWARD_PER_24H * rewardTokenDecimals / secondsIn24h;
+        // update last claim timestamp
         ownerToTimeFarming[msg.sender] = block.timestamp;
 
-        rewardToken.mint(msg.sender, tokensToMint);
+        // mint tokens to the caller
+        rewardToken.mint(msg.sender, toMint);
 
-        emit Claimed(msg.sender, tokensToMint);
+        emit Claimed(msg.sender, toMint);
     }
-
 
 
 
@@ -99,5 +96,21 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
         return IERC721Receiver.onERC721Received.selector;
     }
 
+
+    /// @notice Returns the amount of tokens claimable by the given address
+    function claimableTokens(address addr) public view returns (uint256 tokensToMint) {
+
+        // if there is no record of the address farming return 0
+        if (ownerToTimeFarming[addr] == 0) return 0;
+
+        // the time interval since the NFT was depoisted or the last claim
+        uint256 farmingPeriod = block.timestamp - ownerToTimeFarming[addr];
+
+        // calculate the amount of tokens to mint to the staker
+        uint256 secondsIn24h = 86_400;
+        uint256 rewardTokenDecimals = 1e18;
+        
+        tokensToMint = farmingPeriod * REWARD_PER_24H * rewardTokenDecimals / secondsIn24h;
+    }
 
 }
