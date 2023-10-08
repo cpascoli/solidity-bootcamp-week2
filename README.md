@@ -1,4 +1,4 @@
-# RareSkills Advanced Solidity Bootcamp - week 1
+# RareSkills Advanced Solidity Bootcamp - week 2
 
 This repo contains Markdown files and Solidity contracts for the week 2 assignmewnt regarding ERC2721 Tokens, Staking, and Security.
 
