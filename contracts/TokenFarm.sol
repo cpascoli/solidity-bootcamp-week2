@@ -10,7 +10,7 @@ import { IRewardToken } from "./token/RewardToken.sol";
 
 
 /**
- *  @title NFT with 20 max supply
+ *  @title A farming contract for users who stake their NFTs.
  *  @author Carlo Pascoli
  *  @notice A contract that can mint ERC20 tokens to NFT token holders who stake their NFTs.
  *          Users can send their NFTs and withdraw 10 ERC20 tokens every 24 hours.

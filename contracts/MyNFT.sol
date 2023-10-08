@@ -10,7 +10,7 @@ import { BitMaps } from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 
 
 /**
- *  @title NFT with 20 max supply
+ *  @title NFT with whitelist for sale price discount
  *  @author Carlo Pascoli
  *  @notice NFT minting contract with whitelist of addresses that get a discount on the minting price.
  *          BitMaps are used to prevent multiple mints from the same whitelisted addresses.
