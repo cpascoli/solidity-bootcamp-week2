@@ -56,6 +56,7 @@ contract PrimeNftCounter {
                     }
 
                     unchecked {
+                        // skips multiples of 2 or 3
                         j += (j+2 % 3 == 0) ? 4 : 2;
                     }
                 }
