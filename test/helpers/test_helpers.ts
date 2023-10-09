@@ -99,3 +99,22 @@ export const deployTokenFarm = async () => {
 
     return { tokenFarm, myNFT, rewardToken, owner, user0, user1, user2 };
 }
+
+
+
+
+/**
+ * @returns an object containing an instance of the PrimeNftCounter contract
+ */
+
+export const deployPrimeNftCounter = async () => {
+
+    const  { myNFT, owner, user0, user1, user2 } = await deployMyNFT()
+ 
+     const PrimeNftCounter = await ethers.getContractFactory("PrimeNftCounter")
+     const primeNftCounter = await PrimeNftCounter.deploy(myNFT.address)
+ 
+     
+     return { primeNftCounter, myNFT, owner, user0, user1, user2 };
+ }
+ 
