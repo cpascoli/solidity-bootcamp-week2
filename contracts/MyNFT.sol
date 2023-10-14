@@ -50,7 +50,7 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     // Events
     event MerkleRootSet(bytes32 root);
     event Withdrawn(address indexed recipient, uint256 amount);
-    event PublicMintEnabledChange(bool isEnabled);
+    event PublicMintEnabledChanged(bool isEnabled);
 
 
     constructor(
@@ -69,20 +69,15 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     }
 
 
-    /// @notice Only owner function able to mint an NFT for free to the provided address
-    function mintToOwner() external onlyOwner {
-        mintAtPrice(msg.sender, 0);
-    }
-
 
     /// @notice mint to an address with an optionl discount
-    /// @param to The recipient of the NFT that could be whitelisted or not.
+    /// @param recipient The recipient of the NFT that could be whitelisted or not.
     /// @param index An optional index of the address provided in the list of whitelisted addresses.
     /// @param merkleProof An optional proof that can be provided to prove the address is whitelisted. 
-    function mint(address to, uint256 index, bytes32[] calldata merkleProof) external payable {
+    function mint(address recipient, uint256 index, bytes32[] calldata merkleProof) external payable {
 
-        // determine the price of the NFT
-        (uint256 price, bool whitelisted) = priceForMint(to, merkleProof, index);
+        // determine the price of the NFT based on the whiteist status of the recipient address
+        (uint256 price, bool whitelisted) = priceForMint(recipient, merkleProof, index);
 
         // check if a whitelisted address did already mint and remember that.
         if (whitelisted){
@@ -90,7 +85,7 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
             mintedAddresses.set(index);
         }
       
-        mintAtPrice(to, price);
+        mintAtPrice(recipient, price);
     }
 
 
@@ -116,18 +111,18 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     }
 
 
-    /// @notice allow the owner to enable and disable the public mint
-    /// @param enableMint true if public mint has to be enabled, false otherwise
+    /// @notice Allow the owner to enable and disable the public mint
+    /// @param enableMint True if public mint should be enabled, false otherwise
     function enablePublicMint(bool enableMint) external onlyOwner {
         isPublicMintEnabled = enableMint;
 
-        emit PublicMintEnabledChange(enableMint);
+        emit PublicMintEnabledChanged(enableMint);
     }
 
 
     ////// Public functions //////
 
-    /// @notice the price for the mint for the given address (can be discounted if a valid proof is provided)
+    /// @notice The price for the mint for the given address (can be discounted if a valid proof is provided)
     /// @param addr An address that could be whitelisted or not.
     /// @param merkleProof An optional proof that can be provided to prove the address is whitelisted. 
     /// @param addr An address that could be whitelisted or not.
@@ -142,14 +137,14 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     }
 
 
-    /// @notice returns true if the provided interfaceId is supported
+    /// @notice Returns true if the provided interfaceId is supported
     /// @param interfaceId An interface Id
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Enumerable, ERC2981) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
 
-    /// @notice verifies that the address is included in the set of whitelistesd addresses
+    /// @notice Verifies that the address is included in the set of whitelistesd addresses
     /// @param addr An address to check
     /// @param merkleProof The Merkle proof for the address provided. Can be empty for non whitelisted addresses.
     /// @param index The index for the address in the whitelist (when a merkleProof is provided)
@@ -165,7 +160,7 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     }
 
 
-    /// @notice intenal Mint function
+    /// @notice Intenal mint function
     /// @param to The address receiving the NFT
     /// @param price The price of the NFT to mint
     function mintAtPrice(address to, uint256 price) internal  {

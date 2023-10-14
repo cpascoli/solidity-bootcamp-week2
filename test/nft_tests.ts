@@ -17,31 +17,41 @@ describe("NFT", function () {
                 expect(await myNFT.totalSupply()).to.be.equal( 0 )
             });
 
-
             it("has Merkle root for the whitelist", async function () {
                 const { myNFT, tree } = await loadFixture(deployMyNFT);
 
                 expect (await myNFT.merkleRoot() ).to.be.equal(tree.root)
             });
-
-
-            it("can mint up to 20 NFT", async function () {
-                const { myNFT,  owner, user0 } = await loadFixture(deployMyNFT);
-
-              
-                for await (let i of Array.from({length: 20}, (_, i) => i)) {
-                    await myNFT.connect(owner).mintToOwner()
-                }
-                
-                expect(await myNFT.totalSupply()).to.be.equal( 20 )
-
-                await expect( 
-                    myNFT.connect(owner).mintToOwner()
-                ).to.be.revertedWithCustomError(myNFT, "MaxSupplyReached");
-
-            });
         })
 
+        describe("Max supply", function () {
+
+            it("has max supply of 20 NFT", async function () {
+
+                const { myNFT, user1} = await loadFixture(deployMyNFT);
+
+                expect(await myNFT.MAX_SUPPLY()).to.be.equal( 20 );
+            });
+
+            it("can mint up to 20 NFT", async function () {
+
+                const { myNFT, user1} = await loadFixture(deployMyNFT);
+                const fullPrice = await myNFT.MINT_PRICE()
+
+                // Mint 20 NFT at full price
+                for await (let i of Array.from({length: 20}, (_, i) => i)) {
+                    
+                    await myNFT.mint(user1.address, 0, [], {value: fullPrice});
+                }
+                
+                expect(await myNFT.totalSupply()).to.be.equal( 20 );
+
+                // Minting more then the max supply reverts
+                await expect( 
+                    myNFT.mint(user1.address, 0, [], {value: fullPrice})
+                ).to.be.revertedWithCustomError(myNFT, "MaxSupplyReached")
+            });
+        })
 
         describe("Merkle tree", function () {
 
