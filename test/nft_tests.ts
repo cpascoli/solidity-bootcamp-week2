@@ -45,8 +45,8 @@ describe("NFT", function () {
 
         describe("Merkle tree", function () {
 
-            it("verify proof for whitelisted address", async function () {
-                const { myNFT, tree, user0, user1, user2} = await loadFixture(deployMyNFT);
+            it("is a whitelisted addres when a valid proof is provided", async function () {
+                const { myNFT, tree, user1, user2} = await loadFixture(deployMyNFT);
 
                 // Generate proof for user1
                 let proof;
@@ -62,6 +62,13 @@ describe("NFT", function () {
                   
                 // Verify user2 address is not included in the whitelisted set
                 expect (await myNFT.isWhitelistedAddress(user2.address, proof, 2) ).to.be.false
+            });
+
+            it("is not a whitelisted address when a proof is not provided", async function () {
+                const { myNFT, user2} = await loadFixture(deployMyNFT);
+
+                // Verify user2 address is not included in the whitelisted set
+                expect (await myNFT.isWhitelistedAddress(user2.address, [], 1) ).to.be.false
             });
 
         })
