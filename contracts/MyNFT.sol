@@ -20,10 +20,12 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
 
     using BitMaps for BitMaps.BitMap;
 
+    uint256 public constant DISCOUNT_PERCENTAGE_DENOMINATOR = 1e4;
+
+    uint256 public immutable MINT_PRICE; // in wei
     uint96 public immutable MAX_SUPPLY;
-    uint96 public immutable FEE_NUMERATOR;  // uses 10000 denumerator
-    uint256 public immutable MINT_PRICE;     // in wei
-    uint96 public immutable DISCOUNT_PERCENTAGE; // uses _feeDenominator()
+    uint96 public immutable FEE_NUMERATOR; // uses 10000 denumerator
+    uint96 public immutable DISCOUNT_PERCENTAGE; // includes DISCOUNT_PERCENTAGE_DENOMINATOR decimals
 
 
     /// @notice the Id of the last NFT minted
@@ -75,13 +77,10 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     /// @notice mint to an address with an optionl discount
     function mint(address to, uint256 index, bytes32[] calldata merkleProof) external payable {
 
-        // check if have already minted
-       
-
         // determine price for mint
         (uint256 price, bool whitelisted) = priceForMint(to, merkleProof, index);
 
-        // rememmber the address did mint
+        // check if a whitelisted address did already mint and remember that.
         if (whitelisted){
             if (mintedAddresses.get(index)) revert AddressAlreadyMinted();
             mintedAddresses.set(index);
@@ -120,12 +119,15 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     ////// Public functions //////
 
     /// @notice the price for the mint for the given address (can be discounted if a valid proof is provided)
+    /// @param addr An address that could be whitelisted or not.
+    /// @param merkleProof An optional proof that can be provided to prove the address is whitelisted. 
+    /// @param addr An address that could be whitelisted or not.
     /// @dev the index is associated to the whitelisted address and included in the proof verification
     function priceForMint(address addr, bytes32[] calldata merkleProof, uint256 index) public view returns (uint256 price, bool whitelisted) {
         
         whitelisted = merkleProof.length > 0 && isWhitelistedAddress(addr, merkleProof, index);
         
-        uint256 discount = whitelisted ? MINT_PRICE * DISCOUNT_PERCENTAGE / feeDenominator() : 0;
+        uint256 discount = whitelisted ? MINT_PRICE * DISCOUNT_PERCENTAGE / DISCOUNT_PERCENTAGE_DENOMINATOR : 0;
         
         price = MINT_PRICE - discount;
     }
@@ -138,15 +140,19 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     }
 
 
-    /// @notice verifies that the address provided is included in the Merkle tree of the whitelistesd addresses
-    /// @param addr The address to check
-    /// @param merkleProof The Merkle proof for the address verify
-    /// @param index The index for the address in whitelist if merkleProof is provided 
+    /// @notice verifies that the address is included in the set of whitelistesd addresses
+    /// @param addr An address to check
+    /// @param merkleProof The Merkle proof for the address provided. Can be empty for non whitelisted addresses.
+    /// @param index The index for the address in the whitelist (when a merkleProof is provided)
     function isWhitelistedAddress(address addr, bytes32[] calldata merkleProof, uint256 index) public view returns (bool) {
+        
+        // if no proof is provided the address is not whitelisted
+        if (merkleProof.length == 0) return false;
+
         // Verify the merkle proof.
         bytes32 leaf = keccak256(bytes.concat(keccak256(abi.encode(addr, index))));
 
-        return MerkleProof.verify(merkleProof, merkleRoot, leaf);
+        return MerkleProof.verifyCalldata(merkleProof, merkleRoot, leaf);
     }
 
 
@@ -167,8 +173,8 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
         emit Minted(tokenId);
     }
 
-
-    function feeDenominator() internal pure returns(uint96)  {
+    /// @notice the denominator of the discount percentage
+    function discountDenominator() internal pure returns(uint96)  {
         return 10000;
     }
 
