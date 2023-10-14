@@ -40,16 +40,17 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     /// @notice Bitmap to keep track of addresses who already minted  
     BitMaps.BitMap private mintedAddresses;
 
-
+    // Errors
     error MaxSupplyReached();
     error AddressAlreadyMinted();
     error WrongPrice(uint256 sent, uint256 expected);
     error MintNotEnabled();
     error NoBots();
 
-
+    // Events
     event MerkleRootSet(bytes32 root);
-    event Minted(uint256 identifier);
+    event Withdrawn(address indexed recipient, uint256 amount);
+    event PublicMintEnabledChange(bool isEnabled);
 
 
     constructor(
@@ -75,9 +76,12 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
 
 
     /// @notice mint to an address with an optionl discount
+    /// @param to The recipient of the NFT that could be whitelisted or not.
+    /// @param index An optional index of the address provided in the list of whitelisted addresses.
+    /// @param merkleProof An optional proof that can be provided to prove the address is whitelisted. 
     function mint(address to, uint256 index, bytes32[] calldata merkleProof) external payable {
 
-        // determine price for mint
+        // determine the price of the NFT
         (uint256 price, bool whitelisted) = priceForMint(to, merkleProof, index);
 
         // check if a whitelisted address did already mint and remember that.
@@ -91,6 +95,7 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
 
 
     /// @notice Set the root of the Merkle tree used to verify the whitelisted addresses
+    /// @param _merkleRoot The merkle root of the list of whitelisted addresses
     function setWhiteListMerkleRoot(bytes32 _merkleRoot) external onlyOwner {
         merkleRoot = _merkleRoot;
 
@@ -106,6 +111,8 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
         (bool success, ) = payable(to).call{ value: amountToWithdraw }("");
         
         require(success, "Could not send ETH");
+
+        emit Withdrawn(to, amount);
     }
 
 
@@ -113,6 +120,8 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     /// @param enableMint true if public mint has to be enabled, false otherwise
     function enablePublicMint(bool enableMint) external onlyOwner {
         isPublicMintEnabled = enableMint;
+
+        emit PublicMintEnabledChange(enableMint);
     }
 
 
@@ -125,7 +134,7 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     /// @dev the index is associated to the whitelisted address and included in the proof verification
     function priceForMint(address addr, bytes32[] calldata merkleProof, uint256 index) public view returns (uint256 price, bool whitelisted) {
         
-        whitelisted = merkleProof.length > 0 && isWhitelistedAddress(addr, merkleProof, index);
+        whitelisted = isWhitelistedAddress(addr, merkleProof, index);
         
         uint256 discount = whitelisted ? MINT_PRICE * DISCOUNT_PERCENTAGE / DISCOUNT_PERCENTAGE_DENOMINATOR : 0;
         
@@ -169,13 +178,6 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
 
         // Mint the NFT
         super._safeMint(to, ++tokenId);
-
-        emit Minted(tokenId);
-    }
-
-    /// @notice the denominator of the discount percentage
-    function discountDenominator() internal pure returns(uint96)  {
-        return 10000;
     }
 
 }
