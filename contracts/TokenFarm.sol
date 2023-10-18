@@ -101,10 +101,11 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
     function claimableTokens(address addr) public view returns (uint256 tokensToMint) {
 
         // if there is no record of the address farming return 0
-        if (ownerToTimeFarming[addr] == 0) return 0;
+        uint256 claimIntervalStart = ownerToTimeFarming[addr];
+        if (claimIntervalStart == 0) return 0;
 
         // the time interval since the NFT was depoisted or the last claim
-        uint256 farmingPeriod = block.timestamp - ownerToTimeFarming[addr];
+        uint256 farmingPeriod = block.timestamp - claimIntervalStart;
 
         // calculate the amount of tokens to mint to the staker
         uint256 secondsIn24h = 86_400;
