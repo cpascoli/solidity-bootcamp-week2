@@ -44,14 +44,13 @@ export const getLastBlockTimestamp = async () => {
 /**
  * @returns an object containing an instance of the MyNFT contract
  */
-export const deployMyNFT = async () => {
+export const deployMyNFT = async (MAX_SUPPLY: number = 20) => {
 
     const [ owner, user0, user1, user2 ] = await ethers.getSigners();
 
-    const MAX_SUPPLY = 20;
     const FEE_NUMERATOR = 250; // 2.5% fee
     const DISCOUNT_PERCENTAGE = 2000; // 20% discount
-    const MINT_PRICE = toWei( 0.1 ); // 0.1 ETH
+    const MINT_PRICE = toWei( 0.01 ); // 0.01 ETH
 
     const MyNFT = await ethers.getContractFactory("MyNFT")
     const myNFT = await MyNFT.deploy(MAX_SUPPLY, FEE_NUMERATOR, DISCOUNT_PERCENTAGE, MINT_PRICE)
@@ -109,7 +108,7 @@ export const deployTokenFarm = async () => {
 
 export const deployPrimeNftCounter = async () => {
 
-    const  { myNFT, owner, user0, user1, user2 } = await deployMyNFT()
+    const  { myNFT, owner, user0, user1, user2 } = await deployMyNFT(1000)
  
      const PrimeNftCounter = await ethers.getContractFactory("PrimeNftCounter")
      const primeNftCounter = await PrimeNftCounter.deploy(myNFT.address)

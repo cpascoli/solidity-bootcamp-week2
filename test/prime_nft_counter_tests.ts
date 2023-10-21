@@ -40,6 +40,17 @@ describe("NftCounter", function () {
         expect(await primeNftCounter.countPrimes(user2.address)).to.be.equal(2)
     });
 
+    it("count 2 prime nfts for tokensIds between 1 and 3", async function () {
+        const { primeNftCounter, myNFT, user1, user2 } = await loadFixture(deployPrimeNftCounter);
+
+        const fullPrice = await myNFT.MINT_PRICE()
+        // mint tokens from 1 to 20 to user1
+        for await (let i of Array.from({length: 3}, (_, i) => i)) {
+            await myNFT.mint(user1.address, 0, [], {value: fullPrice});
+        }
+
+        expect(await primeNftCounter.countPrimes(user1.address)).to.be.equal(2)
+    });
 
     it("count 8 prime nfts for tokensIds from 1 to 20", async function () {
         const { primeNftCounter, myNFT, user1, user2 } = await loadFixture(deployPrimeNftCounter);
@@ -53,17 +64,15 @@ describe("NftCounter", function () {
         expect(await primeNftCounter.countPrimes(user1.address)).to.be.equal(8)
     });
        
-
-    it("count 2 prime nfts for tokensIds from 1 to 3", async function () {
+    it("count 168 prime nfts for tokensIds between 1 and 1000", async function () {
         const { primeNftCounter, myNFT, user1, user2 } = await loadFixture(deployPrimeNftCounter);
-
         const fullPrice = await myNFT.MINT_PRICE()
         // mint tokens from 1 to 20 to user1
-        for await (let i of Array.from({length: 3}, (_, i) => i)) {
+        for await (let i of Array.from({length: 1000}, (_, i) => i)) {
             await myNFT.mint(user1.address, 0, [], {value: fullPrice});
         }
 
-        expect(await primeNftCounter.countPrimes(user1.address)).to.be.equal(2)
+        expect(await primeNftCounter.countPrimes(user1.address)).to.be.equal(168)
     });
 
 });

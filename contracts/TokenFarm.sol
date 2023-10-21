@@ -29,6 +29,7 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
     error TokenTransferNotApproved();
     error NotTheTokenOwner();
     error AlreadyDeposited();
+    error InvalidCaller();
 
     event Deposited(address indexed sender, uint256 tokenId);
     event Withdrawn(address indexed recipient, uint256 tokenId);
@@ -76,7 +77,6 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
     }
 
 
-
     /// @notice IERC721Receiver callback executed when safeTransferFrom is used to send the NFT to this contract
     function onERC721Received(
         address operator,
@@ -85,11 +85,12 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
         bytes calldata data
     ) external returns (bytes4) {
 
+        // ensure the caller is the nft contract
+        if(msg.sender != address(nftToken)) revert InvalidCaller();
         if(tokenToOwner[tokenId] != address(0)) revert AlreadyDeposited();
 
         tokenToOwner[tokenId] = from;
         ownerToTimeFarming[from] = block.timestamp;
-
 
         emit Deposited(msg.sender, tokenId);
 
@@ -108,7 +109,7 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
         uint256 farmingPeriod = block.timestamp - claimIntervalStart;
 
         // calculate the amount of tokens to mint to the staker
-        uint256 secondsIn24h = 86_400;
+        uint256 secondsIn24h = 1 days;
         uint256 rewardTokenDecimals = 1e18;
         
         tokensToMint = farmingPeriod * REWARD_PER_24H * rewardTokenDecimals / secondsIn24h;

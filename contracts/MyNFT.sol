@@ -102,8 +102,8 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     /// @param amount The amount of ETH to withdraw. If 0 is passed witwithdraw the full balance.
     function withdraw(address to, uint256 amount) external onlyOwner {
         uint256 amountToWithdraw = amount == 0 ? address(this).balance : amount;
-
-        (bool success, ) = payable(to).call{ value: amountToWithdraw }("");
+        
+        (bool success, ) = to.call{ value: amountToWithdraw }("");
         
         require(success, "Could not send ETH");
 
