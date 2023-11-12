@@ -6,3 +6,13 @@ typechain-types
 cache
 artifacts
 .env
+
+coverage.json
+coverage
+
+slither.db.json
+# .solcover.js
+
+docgen
+
+*.sh

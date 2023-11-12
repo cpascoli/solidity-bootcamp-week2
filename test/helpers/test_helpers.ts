@@ -75,10 +75,13 @@ export const deployMyNFT = async (MAX_SUPPLY: number = 20) => {
     return { myNFT, tree, owner, user0, user1, user2 };
 }
 
+export const deploySimpleNFT = async (MAX_SUPPLY: number = 20) => {
 
-/**
- * @returns an object containing an instance of the MyNFT contract
- */
+    const SimpleNFT = await ethers.getContractFactory("SimpleNFT")
+    const simpleNFT = await SimpleNFT.deploy()
+
+    return { simpleNFT };
+}
 
 export const deployTokenFarm = async () => {
 
@@ -92,9 +95,10 @@ export const deployTokenFarm = async () => {
 
     await rewardToken.transferOwnership(tokenFarm.address)
 
-    // Mint 1 NFT to user0
+    // Mint 2 NFTs to user0
     const fullPrice = await myNFT.MINT_PRICE()
     await myNFT.mint(user0.address, 0, [], {value: fullPrice});
+    await myNFT.mint(user0.address, 1, [], {value: fullPrice});
 
     return { tokenFarm, myNFT, rewardToken, owner, user0, user1, user2 };
 }

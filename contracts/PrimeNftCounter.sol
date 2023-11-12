@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.18;
 
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,7 +16,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
  */
 contract PrimeNftCounter {
 
-    IERC721Enumerable public nftToken;
+    IERC721Enumerable public immutable nftToken;
 
     constructor(address nftTokenAddress ) {
         nftToken = IERC721Enumerable(nftTokenAddress);

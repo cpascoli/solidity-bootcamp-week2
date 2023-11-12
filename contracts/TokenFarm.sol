@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.18;
 
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -20,15 +20,15 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
 
     uint256 constant public REWARD_PER_24H = 10;
 
-    IERC721 public nftToken;
-    IRewardToken public rewardToken;
+    IERC721 public immutable nftToken;
+    IRewardToken public immutable rewardToken;
     mapping (uint256 => address) public tokenToOwner;
     mapping (address => uint256) public ownerToTimeFarming;
 
 
     error TokenTransferNotApproved();
     error NotTheTokenOwner();
-    error AlreadyDeposited();
+    // error AlreadyDeposited();
     error InvalidCaller();
 
     event Deposited(address indexed sender, uint256 tokenId);
@@ -53,9 +53,9 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
         delete tokenToOwner[tokenId];
         delete ownerToTimeFarming[msg.sender];
 
-        nftToken.safeTransferFrom(address(this), msg.sender, tokenId);
-
         emit Withdrawn(msg.sender, tokenId);
+
+        nftToken.safeTransferFrom(address(this), msg.sender, tokenId);
     }
 
 
@@ -70,24 +70,23 @@ contract TokenFarm is Ownable2Step, IERC721Receiver {
         // update last claim timestamp
         ownerToTimeFarming[msg.sender] = block.timestamp;
 
+        emit Claimed(msg.sender, toMint);
+
         // mint tokens to the caller
         rewardToken.mint(msg.sender, toMint);
-
-        emit Claimed(msg.sender, toMint);
     }
 
 
     /// @notice IERC721Receiver callback executed when safeTransferFrom is used to send the NFT to this contract
     function onERC721Received(
-        address operator,
+        address /*operator*/,
         address from,
         uint256 tokenId,
-        bytes calldata data
+        bytes calldata /*data*/
     ) external returns (bytes4) {
 
         // ensure the caller is the nft contract
         if(msg.sender != address(nftToken)) revert InvalidCaller();
-        if(tokenToOwner[tokenId] != address(0)) revert AlreadyDeposited();
 
         tokenToOwner[tokenId] = from;
         ownerToTimeFarming[from] = block.timestamp;

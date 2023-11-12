@@ -25,7 +25,7 @@ const config : HardhatUserConfig = {
   },
 
   solidity: {
-    version: "0.8.19",
+    version: "0.8.18",
     settings: {
       optimizer: {
         enabled: true,
@@ -44,7 +44,7 @@ const config : HardhatUserConfig = {
   },
 
   docgen: {
-    path: './docs',
+    path: './docgen',
     clear: true,
     runOnCompile: true,
   },

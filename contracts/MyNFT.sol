@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.18;
 
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -46,6 +46,7 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     error WrongPrice(uint256 sent, uint256 expected);
     error MintNotEnabled();
     error NoBots();
+    error ZeroAddress();
 
     // Events
     event MerkleRootSet(bytes32 root);
@@ -101,13 +102,16 @@ contract MyNFT is ERC721Enumerable, ERC2981, Ownable2Step {
     /// @notice allow the owner to withdraw the ETH from the contract
     /// @param amount The amount of ETH to withdraw. If 0 is passed witwithdraw the full balance.
     function withdraw(address to, uint256 amount) external onlyOwner {
+        if (to == address(0)) revert ZeroAddress();
+
         uint256 amountToWithdraw = amount == 0 ? address(this).balance : amount;
         
-        (bool success, ) = to.call{ value: amountToWithdraw }("");
-        
-        require(success, "Could not send ETH");
+        if (amountToWithdraw == 0) return;
 
         emit Withdrawn(to, amount);
+        (bool success, ) = to.call{ value: amountToWithdraw }("");
+
+        require(success, "Could not send ETH");
     }
 
 
