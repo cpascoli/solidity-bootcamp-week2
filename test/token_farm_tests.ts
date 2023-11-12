@@ -142,13 +142,9 @@ describe("TokenFarm", function () {
             // wait for 24h
             await waitSeconds(24 * 60 * 60)
 
-            // claim the ERC20 token
-            await tokenFarm.connect(user1).claimTokens(1);
-
             // non nft owners claiming tokens should revert
             await expect( 
-                await tokenFarm.connect(user1).claimTokens(1)
-                // tokenFarm.connect(user1).withdraw(1) 
+                tokenFarm.connect(user1).claimTokens(1)
             ).to.be.revertedWithCustomError(tokenFarm, "NotTheTokenOwner")
         });
 
